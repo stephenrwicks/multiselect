@@ -1,0 +1,191 @@
+multi-select {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 34px;
+    width: clamp(150px, 240px, 700px);
+    border-radius: 4px;
+    cursor: default;
+    user-select: none;
+    position: relative;
+    padding: 0px .3em 0px 1em;
+    color: var(--fontColor);
+    font: var(--font);
+    border: 1px solid var(--borderColor);
+    background-color: var(--backgroundColor);
+    transition: all .1s ease;
+
+    * {
+        transition: all .1s ease;
+    }
+
+    &[disabled],
+    label[role="option"]:has(input[type="checkbox"][disabled]) {
+        cursor: default;
+        opacity: .7;
+        filter: grayscale(50%);
+    }
+
+    &:not([disabled]):hover,
+    label[role="option"]:not(:has(input[type="checkbox"][disabled])):hover {
+        background-color: var(--hoverColor);
+    }
+
+    &:not([disabled]):focus,
+    label[role="option"]:not(:has(input[type="checkbox"][disabled])):focus {
+        background-color: var(--focusColor);
+    }
+
+    &[disabled]:hover,
+    &[disabled]:focus {
+        background-color: initial;
+        opacity: .7;
+        filter: grayscale(50%);
+    }
+
+    div[role="listbox"] {
+        display: none;
+        width: 100%;
+        border-radius: 4px;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 99;
+        min-height: 10em;
+        max-height: 20em;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        padding-bottom: 5px;
+        border: 1px solid var(--borderColor);
+        box-shadow: var(--boxShadow);
+        background-color: var(--backgroundColor);
+    }
+
+    span {
+        pointer-events: none;
+    }
+
+    fieldset[role="group"] {
+        all: unset;
+        margin: 6px;
+        padding: 3px 0px;
+        border: 1px solid var(--borderColor);
+
+        legend {
+            all: unset;
+            font-size: 1.1em;
+            margin-left: .5em;
+            padding: 0px .3em;
+            font-weight: bold;
+        }
+    }
+
+    svg {
+        /* Chevron */
+        pointer-events: none;
+        color: var(--chevronColor)
+    }
+
+    label[role="option"] {
+        all: unset;
+        display: grid;
+        align-items: center;
+        grid-template-columns: min-content 1fr;
+        gap: .8rem;
+        cursor: pointer;
+        padding: 7px 5px;
+        font-weight: normal;
+        margin: 0px;
+        height: fit-content;
+    }
+
+    label[role="option"].multi-select-select-all-label {
+        margin: 5px 0px;
+        border-top: 1px solid var(--borderColor);
+        border-bottom: 1px solid var(--borderColor);
+    }
+
+    div.multi-select-search-container {
+        display: grid;
+        align-items: center;
+        margin: 8px .5em 2px .5em;
+        cursor: text;
+
+        input[type="text"] {
+            all: unset;
+            padding: .3em 1.5em .3em .3em;
+            border: 1px solid var(--borderColor);
+            grid-area: 1/1/1/1;
+
+            &:focus {
+                background-color: var(--focusColor);
+            }
+        }
+
+        svg {
+            margin-right: .3em;
+            justify-self: end;
+            grid-area: 1/1/1/1;
+            color: var(--borderColor)
+        }
+    }
+
+    input[type="checkbox"] {
+        outline: none;
+        cursor: pointer;
+        transform: scale(1.4);
+        margin: 0px .4em;
+        accent-color: var(--checkboxColor);
+    }
+
+    input[type="checkbox"]:active,
+    input[type="checkbox"]:focus {
+        outline: none;
+    }
+
+    /* Default */
+    --fontColor: initial;
+    --font: normal .8em Helvetica, Arial, sans-serif;
+    --backgroundColor: white;
+    --borderColor: #ccc;
+    --hoverColor: #eee;
+    --boxShadow: 1px 1px 8px 2px #ccc;
+    --focusColor: var(--hoverColor);
+    --chevronColor: var(--fontColor);
+    --checkboxColor: initial;
+
+    &[data-multi-select-theme="mint"] {
+        --fontColor: rgb(0, 44, 0);
+        --font: italic 1em Helvetica, Arial, sans-serif;
+        --borderColor: green;
+        --backgroundColor: mintcream;
+        --hoverColor: rgb(173, 230, 190);
+        --checkboxColor: rgb(108, 255, 235);
+    }
+
+    &[data-multi-select-theme="grace"] {
+        --fontColor: rgb(46, 3, 46);
+        --font: normal .9em Georgia;
+        --borderColor: purple;
+        --backgroundColor: rgb(255, 248, 239);
+        --hoverColor: rgb(247, 214, 238);
+        --checkboxColor:  rgb(255, 188, 255);
+        --chevronColor: rgb(255, 188, 255);
+    }
+
+    &[data-multi-select-theme="lenore"] {
+        --fontColor: rgb(233, 233, 233);
+        --font: bold 1.1em Calibri;
+        --borderColor: rgba(178, 115, 33, 0.711);
+        --backgroundColor: #5C4033;
+        --hoverColor: #C4A484;
+        --checkboxColor: #D27D2D;
+        --chevronColor: #D27D2D;
+        /* --boxShadow: unset; */
+    }
+
+    /* &[data-multi-select-theme="bootstrap3"] {
+
+    } */
+
+}
