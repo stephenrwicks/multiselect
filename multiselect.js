@@ -48,10 +48,9 @@ class MultiSelect extends HTMLElement {
         svg.appendChild(line);
         container.append(this.#searchInput, svg);
         this.#searchInput.type = 'text';
+        this.#searchInput.setAttribute('form', '');
         this.#searchInput.spellcheck = false;
-        this.#searchInput.addEventListener('input', () => {
-            this.#search(this.#searchInput.value);
-        });
+        this.#searchInput.addEventListener('input', () => this.#search(this.#searchInput.value));
         return container;
     })();
     #selectAllCheckbox = document.createElement('input');
@@ -308,6 +307,9 @@ class MultiSelect extends HTMLElement {
         if (e.target === this.#searchInput && e.key === 'ArrowDown') {
             e.preventDefault();
             this.#focusableOpts[0]?.focus();
+        }
+        if (e.target === this.#searchInput && e.key === 'Tab') {
+            e.preventDefault();
         }
     };
     get #focusableOpts() {
