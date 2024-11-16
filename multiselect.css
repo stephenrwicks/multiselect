@@ -1,8 +1,9 @@
 multi-select {
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 34px;
+    min-height: 30px;
     width: clamp(150px, 240px, 700px);
     border-radius: 4px;
     cursor: default;
@@ -11,6 +12,7 @@ multi-select {
     padding: 0px .3em 0px 1em;
     color: var(--fontColor);
     font: var(--font);
+    font-size: 10pt;
     border: 1px solid var(--borderColor);
     background-color: var(--backgroundColor);
     transition: all .1s ease;
@@ -51,14 +53,17 @@ multi-select {
         top: 100%;
         left: 0;
         z-index: 99;
-        min-height: 10em;
         max-height: 20em;
         overflow-y: auto;
         scrollbar-width: thin;
-        padding-bottom: 5px;
+        padding: 5px 0px;
         border: 1px solid var(--borderColor);
         box-shadow: var(--boxShadow);
         background-color: var(--backgroundColor);
+        
+        &:not(:has(label)) {
+            min-height: 10em;
+        }
     }
 
     span {
@@ -67,6 +72,7 @@ multi-select {
 
     fieldset[role="group"] {
         all: unset;
+        display: block;
         margin: 6px;
         padding: 3px 0px;
         border: 1px solid var(--borderColor);
@@ -81,7 +87,6 @@ multi-select {
     }
 
     svg {
-        /* Chevron */
         pointer-events: none;
         color: var(--chevronColor)
     }
@@ -108,12 +113,12 @@ multi-select {
     div.multi-select-search-container {
         display: grid;
         align-items: center;
-        margin: 8px .5em 2px .5em;
+        margin: 0px .5rem .3rem .5rem;
         cursor: text;
 
         input[type="text"] {
             all: unset;
-            padding: .3em 1.5em .3em .3em;
+            padding: .3rem 1.5rem .3rem .3rem;
             border: 1px solid var(--borderColor);
             grid-area: 1/1/1/1;
 
@@ -172,18 +177,7 @@ multi-select {
         --checkboxColor:  rgb(255, 188, 255);
         --chevronColor: rgb(255, 188, 255);
     }
-
-    &[data-multi-select-theme="lenore"] {
-        --fontColor: rgb(233, 233, 233);
-        --font: bold 1.1em Calibri;
-        --borderColor: rgba(178, 115, 33, 0.711);
-        --backgroundColor: #5C4033;
-        --hoverColor: #C4A484;
-        --checkboxColor: #D27D2D;
-        --chevronColor: #D27D2D;
-        /* --boxShadow: unset; */
-    }
-
+    
     /* &[data-multi-select-theme="bootstrap3"] {
 
     } */

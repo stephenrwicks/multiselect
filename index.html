@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="multiselect.css">
+    <script src="multiselect.js"></script>
+    <!-- <link href=" https://cdn.jsdelivr.net/npm/bootstrap3@3.3.5/dist/css/bootstrap.min.css " rel="stylesheet"> -->
+    <style>
+        form {
+            width: fit-content;
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        pre {
+            margin: 10px 0px;
+            padding: 10px;
+            width: fit-content;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: #f3f3f3;
+        }
+
+        table {
+            max-width: 1000px;
+            border-collapse: collapse;
+        }
+
+        td {
+            padding: 2px 5px;
+        }
+
+        label {
+            display: block;
+            user-select: none;
+            margin: 5px;
+            width: fit-content;
+        }
+
+        button {
+            display: block;
+            margin: 5px;
+        }
+
+        h1 {
+            font-size: 16pt;
+        }
+
+        h2 {
+            font-size: 14pt;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>&lt;multi-select&gt; for plain html</h1>
+
+    <p>Last updated: 11/15/24</p>
+
+    <p>This is my attempt to replace
+        <code>&lt;select multiple&gt;</code>.
+    </p>
+
+    <p>The vanilla <code>&lt;select&gt;</code> element works fine.
+    <p>
+
+    </p>But <code>&lt;select multiple&gt;</code> only gives you a listbox element, and not a dropdown. It
+    requires the user to use shift/ctrl to select multiple.</p>
+
+    <pre>
+        <code>
+&lt;select multiple&gt;
+    &lt;option&gt;Option 1&lt;/option&gt;
+    &lt;option&gt;Option 2&lt;/option&gt;
+    &lt;option&gt;Option 3&lt;/option&gt;
+&lt;/select&gt;
+        </code>
+        </pre>
+
+    <select multiple>
+        <option>Option 1</option>
+        <option>Option 2</option>
+        <option>Option 3</option>
+    </select>
+
+    <p>This is annoying because you usually have to inject some JS to get a better form control.</p>
+
+    <p>My multi-select can be initialized from plain HTML.</p>
+
+    <p>Just include multiselect.js and multiselect.css.</p>
+
+
+    <pre>
+<code>
+&lt;multi-select&gt;
+    &lt;option&gt;Option 1&lt;/option&gt;
+    &lt;option&gt;Option 2&lt;/option&gt;
+    &lt;option&gt;Option 3&lt;/option&gt;
+&lt;/multi-select&gt;
+</code>
+</pre>
+
+    <multi-select>
+        <option>Option 1</option>
+        <option>Option 2</option>
+        <option>Option 3</option>
+    </multi-select>
+
+    <select>
+        <option>Option 1</option>
+        <option>Option 2</option>
+        <option>Option 3</option>
+    </select>
+
+
+    <p>It supports optgroups, disabled options, select all, search, and custom text.</p>
+
+    <pre>
+<code>
+&lt;multi-select id="form-demo" name="form-demo" show-select-all show-search empty-text="Select Ice Cream" selected-text="Ice Creams"&gt;
+    &lt;optgroup label="Regular flavors"&gt;
+        &lt;option value="VAN" disabled&gt;Vanilla (out of stock)&lt;/option&gt;
+        &lt;option value="CHO"&gt;Chocolate&lt;/option&gt;
+        &lt;option value="STW"&gt;Strawberry&lt;/option&gt;
+        &lt;option label="Pistachio" value="PIS"&gt;&lt;/option&gt;
+    &lt;/optgroup&gt;
+    &lt;optgroup label="Specialty Flavors"&gt;
+        &lt;option value="RASP"&gt;Raspberry Ripple&lt;/option&gt;
+        &lt;option value="CHOCOFUDGE"&gt;Chocolate Fudge Brownie &lt;/option&gt;
+    &lt;/optgroup&gt;
+&lt;/multi-select&gt;
+        </code>
+        </pre>
+
+
+    <p>It works with forms, FormData, and native form validation.</p>
+
+    <form>
+        <p>This is a form</p>
+        <label for="form-demo">this is a label</label>
+        <multi-select id="form-demo" name="form-demo" show-select-all show-search empty-text="Select Ice Cream"
+            selected-text="Ice Creams">
+            <optgroup label="Regular flavors">
+                <option value="VAN" disabled>Vanilla (out of stock)</option>
+                <option value="CHO">Chocolate</option>
+                <option value="STW">Strawberry</option>
+                <option label="Pistachio" value="PIS"></option>
+            </optgroup>
+            <optgroup label="Specialty Flavors">
+                <option value="RASP">Raspberry Ripple</option>
+                <option value="CHOCOFUDGE">Chocolate Fudge Brownie </option>
+            </optgroup>
+        </multi-select>
+    </form>
+
+    <label>
+        <input type="checkbox" id="disabled">
+        disabled
+    </label>
+    <label>
+        <input type="checkbox" id="required">
+        required
+    </label>
+    <label>
+        <input type="checkbox" id="min">
+        set the min to 2
+    </label>
+    <label>
+        <input type="checkbox" id="max">
+        set the max to 4
+    </label>
+    <button id="report" type="button">fire form.reportValidity()</button>
+    <button id="data" type="button">console.log FormData</button>
+    <p>
+        It supports keyboard control using the listbox specs here: <a
+            href="https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role"
+            target="_blank">https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role</a>
+    </p>
+    <p>
+        I made some themes in css that are controlled by the data-multi-select-theme attribute. The stylesheet makes use
+        of variables in such a way that it is easy to add a new theme.
+    </p>
+
+    <div id="theme">
+        <label>
+            <input type="radio" name="theme" value="" checked>
+            default theme
+        </label>
+        <label>
+            <input type="radio" name="theme" value="mint">
+            mint theme
+        </label>
+        <label>
+            <input type="radio" name="theme" value="grace">
+            grace theme
+        </label>
+    </div>
+
+    <p>Privately, this component holds a native <code>&lt;select multiple&gt;</code> in memory and keeps it in sync. All
+        native properties and methods are accessible as well as custom properties and methods. </p>
+
+    <p>The native <code>&lt;option&gt;</code> elements are not accessible on the DOM, but they are accessible through
+        the "options" property. If you want to update these <code>&lt;option&gt;</code>s by setting them to disabled,
+        etc., the multi-select will stay in sync.</p>
+
+    <p>
+        For example <code>el.options[0].disabled = true;</code> will work as expected.
+    </p>
+
+    <p>Reference for native select: <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement"
+            target="_blank">https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement</a></p>
+
+    <p>Full API:</p>
+
+
+    <h2>Native Properties (included in native select)</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Property</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>autocomplete (read-only)</td>
+                <td><em>not implemented</em></td>
+            </tr>
+            <tr>
+                <td>disabled</td>
+                <td>Controls whether the multi-select is disabled. Setting this property to <code>true</code> disables
+                    the dropdown, updates ARIA attributes, and modifies the component's appearance accordingly.</td>
+            </tr>
+            <tr>
+                <td>form (read-only)</td>
+                <td>References the <code>&lt;form&gt;</code> element the multi-select is associated with.</td>
+            </tr>
+            <tr>
+                <td>labels (read-only)</td>
+                <td>Returns a <code>NodeList</code> of all <code>&lt;label&gt;</code> elements associated with this
+                    component.</td>
+            </tr>
+            <tr>
+                <td>length (read-only)</td>
+                <td>Returns the total number of <code>&lt;option&gt;</code> elements within the multi-select.</td>
+            </tr>
+            <tr>
+                <td>multiple (read-only)</td>
+                <td>Always returns <code>true</code>, indicating the component supports multiple selections.</td>
+            </tr>
+            <tr>
+                <td>name</td>
+                <td>Represents the name of the multi-select, allowing it to be referenced within a form.</td>
+            </tr>
+            <tr>
+                <td>options (read-only)</td>
+                <td>Returns an <code>HTMLOptionsCollection</code> of all <code>&lt;option&gt;</code> elements in the
+                    component.</td>
+            </tr>
+            <tr>
+                <td>required</td>
+                <td>Specifies whether the multi-select is required for form validation.</td>
+            </tr>
+            <tr>
+                <td>selectedIndex (read-only)</td>
+                <td>Returns the index of the first selected <code>&lt;option&gt;</code>, or -1 if no option is selected.
+                </td>
+            </tr>
+            <tr>
+                <td>selectedOptions (read-only)</td>
+                <td>Provides a collection of all selected <code>&lt;option&gt;</code> elements.</td>
+            </tr>
+            <tr>
+                <td>size (read-only)</td>
+                <td>Always returns <code>0</code>.</td>
+            </tr>
+            <tr>
+                <td>type (read-only)</td>
+                <td>Returns either <code>"select-multiple"</code> or <code>"select-one"</code>, depending on the
+                    component's selection mode (currently <code>"select-multiple"</code> only).</td>
+            </tr>
+            <tr>
+                <td>validationMessage (read-only)</td>
+                <td>Returns any custom validation message set on the multi-select.</td>
+            </tr>
+            <tr>
+                <td>validity (read-only)</td>
+                <td>Provides the validity state of the multi-select as a <code>ValidityState</code> object.</td>
+            </tr>
+            <tr>
+                <td>value</td>
+                <td>Returns an array of selected values. Can also be set to an array to update the selected options.
+                    <strong>This is different from native select behavior, but it's better. This is what jQuery does.
+                    Native selects only return the first selected value, even with "multiple" enabled, which is not very
+                    useful.</strong></td>
+            </tr>
+            <tr>
+                <td>willValidate (read-only)</td>
+                <td>Indicates if the component is eligible for validation.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Custom Properties</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Property</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>emptyText</td>
+                <td>Custom placeholder text, same as "empty-text" attr</td>
+            </tr>
+            <tr>
+                <td>max</td>
+                <td>Sets the maximum number of options that can be selected.</td>
+            </tr>
+            <tr>
+                <td>min</td>
+                <td>Specifies the minimum number of options required to be selected.</td>
+            </tr>
+            <tr>
+                <td>optgroups (read-only)</td>
+                <td>Returns an array of <code>HTMLOptGroupElement</code> elements within the multi-select.</td>
+            </tr>
+            <tr>
+                <td>open</td>
+                <td>A boolean indicating if the dropdown is currently open. Setting this property controls whether the
+                    dropdown is shown or hidden.</td>
+            </tr>
+            <tr>
+                <td>optionsAsObjects (read-only)</td>
+                <td>Returns an array of objects representing each option, with properties <code>id</code>,
+                    <code>label</code>, <code>text</code>, <code>value</code>, and <code>selected</code>.
+                </td>
+            </tr>
+            <tr>
+                <td>selectedOptionsAsObjects (read-only)</td>
+                <td>Similar to <code>optionsAsObjects</code>, but only includes currently selected options.</td>
+            </tr>
+            <tr>
+                <td>selectedText</td>
+                <td>Custom text, same as "selected-text" attr</td>
+            </tr>
+            <tr>
+                <td>showSearch</td>
+                <td>Toggles the visibility of a search field within the dropdown, allowing users to filter options.</td>
+            </tr>
+            <tr>
+                <td>showSelectAll</td>
+                <td>Controls whether a "Select All" option appears within the dropdown.</td>
+            </tr>
+            <tr>
+                <td>visibleOptions (read-only)</td>
+                <td>Returns an array of visible <code>&lt;option&gt;</code> elements (those not hidden by search).</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Native Methods (included in native select)</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Method</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>add(option, before)</td>
+                <td>Adds an <code>&lt;option&gt;</code> or <code>&lt;optgroup&gt;</code> element to the dropdown.</td>
+            </tr>
+            <tr>
+                <td>checkValidity()</td>
+                <td>Returns a boolean indicating whether the component is valid.</td>
+            </tr>
+            <tr>
+                <td>item(index)</td>
+                <td>Retrieves the <code>&lt;option&gt;</code> element at the specified index.</td>
+            </tr>
+            <tr>
+                <td>namedItem(name)</td>
+                <td>Returns the <code>&lt;option&gt;</code> element with the specified <code>name</code> attribute.</td>
+            </tr>
+            <tr>
+                <td>remove(index)</td>
+                <td>Removes the <code>&lt;option&gt;</code> at the specified index. If no index is provided, removes
+                    element (overload)</td>
+            </tr>
+            <tr>
+                <td>reportValidity()</td>
+                <td>Displays a validation message if the component is invalid.</td>
+            </tr>
+            <tr>
+                <td>setCustomValidity(message)</td>
+                <td>Sets a custom validation message. Clears the message when an empty string is provided.</td>
+            </tr>
+            <tr>
+                <td>showPicker()</td>
+                <td>Alias for <code>show()</code>. Opens the dropdown.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Custom Methods</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Method</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>alphabetize(asc)</td>
+                <td><em>incomplete</em></td>
+            </tr>
+            <tr>
+                <td>deselectAll()</td>
+                <td>Deselects all options.</td>
+            </tr>
+            <tr>
+                <td>hide()</td>
+                <td>Closes the dropdown.</td>
+            </tr>
+            <tr>
+                <td>selectAll()</td>
+                <td>Selects all options.</td>
+            </tr>
+            <tr>
+                <td>show()</td>
+                <td>Opens the dropdown.</td>
+            </tr>
+            <tr>
+                <td>shuffleOptions()</td>
+                <td><em>incomplete</em></td>
+            </tr>
+            <tr>
+                <td>toggle()</td>
+                <td>Toggles the open state of the dropdown.</td>
+            </tr>
+            <tr>
+                <td>toggleSelectAll()</td>
+                <td>Selects/deselects all options.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>This element uses a few new-ish browser features:</p>
+    <ul>
+        <li>native web component with attachInternals() - This allows the element to participate in native forms</li>
+        <li>javascript private class fields</li>
+        <li>native css nesting</li>
+        <li>css :has() selector</li>
+    </ul>
+
+    <p>Some notes:</p>
+    <ul>
+        <li>I avoided using the shadow dom for this project because I wanted this to resemble a native element as much as possible.</li>
+        <li>Directly appending the element as an html string with options inside won't initialize options correctly.
+        </li>
+        <li>document.createElement works as expected. You can also initialize it with new MultiSelect()</li>
+        <li>Modifying the "selected" property of an internal option like <code>el.options[0].selected = true;</code>
+            does not work currently, but changing the attribute does. (Modifying disabled, label, value properties work however. This has to do with how modifying the property updates the attribute natively, since I'm using MutationObserver)
+        </li>
+        <li>With native <code>&lt;option&gt;</code>s, you can designate text with the "label" attribute or a regular text node. This handles either.</li>
+        <li>Drag-clicking on an option outside of the checkbox doesn't toggle it because this is native <code>&lt;label&gt;</code> behavior.
+            Might change this at some point</li>
+        <li>I did my best with aria. Not sure if it's correct</li>
+        <li>The native <code>&lt;select multiple&gt;</code> works with FormData creating a separate entry for each option selected, rather than one array or comma-separated string. I copied the native behavior.</li>
+    </ul>
+
+    <script>
+        const x = document.querySelector('#form-demo');
+        const native = document.querySelector('select');
+        const reportButton = document.querySelector('#report');
+        const dataButton = document.querySelector('#data');
+        const disabled = document.querySelector('#disabled');
+        const required = document.querySelector('#required');
+        const min = document.querySelector('#min');
+        const max = document.querySelector('#max');
+        const form = document.querySelector('form');
+        const themeBox = document.querySelector('#theme');
+        const getFormData = () => new FormData(form);
+        disabled.checked = false;
+        required.checked = false;
+        min.checked = false;
+        max.checked = false;
+        form.addEventListener('submit', (e) => e.preventDefault());
+        reportButton.addEventListener('click', () => form.reportValidity());
+        dataButton.addEventListener('click', () => console.log(new FormData(form)));
+        disabled.addEventListener('change', () => x.disabled = disabled.checked);
+        required.addEventListener('change', () => x.required = required.checked);
+        min.addEventListener('change', () => x.min = min.checked ? 2 : null);
+        max.addEventListener('change', () => x.max = max.checked ? 4 : null);
+        themeBox.addEventListener('change', (e) => x.dataset.multiSelectTheme = e.target.value);
+        console.info(
+            `%c type MultiSelect.prototype here in the console to view properties and methods`,
+            'color: blue; font-size: 20px; font-weight: bold;'
+        );
+
+
+    </script>
+
+</body>
+
+</html>

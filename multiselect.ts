@@ -71,18 +71,13 @@ class MultiSelect extends HTMLElement {
         return label;
     })();
     #childObserver = new MutationObserver(mutations => {
-        // <option>s that are included directly in the HTML are not available immediately,
-        // so we use a mutation observer with a callback to initialize them properly as soon as they are ready
-        // mutationObserver.disconnect(); // Could leave this to listen for later ones
-        // mutationObserver = null as any;
-
         for (const mutation of mutations) {
             if (mutation.type !== 'childList') continue;
             const el = mutation.addedNodes[0];
             if (el instanceof HTMLOptGroupElement || el instanceof HTMLOptionElement) {
                 this.add(el as HTMLOptGroupElement)
             }
-            else if (el instanceof HTMLElement) {
+            else if (el instanceof Element) {
                 el.remove();
             }
         }
@@ -98,12 +93,15 @@ class MultiSelect extends HTMLElement {
                 if (!checkbox) continue;
                 if (mutation.attributeName === 'disabled') {
                     checkbox.disabled = option.hasAttribute('disabled');
+                    checkbox.parentElement!.tabIndex = checkbox.disabled ? -1 : 0;
                 }
                 else if (mutation.attributeName === 'label') {
                     if (!checkbox.nextElementSibling) continue;
                     checkbox.nextElementSibling.textContent = option.label || option.text;
                 }
                 else if (mutation.attributeName === 'selected') {
+                    // KNOWN ISSUE: option.selected = true does NOT reach this code, unlike the other attributes.
+                    // Have to use setAttribute
                     checkbox.checked = option.hasAttribute('selected');
                 }
                 else if (mutation.attributeName === 'value') {
@@ -122,7 +120,6 @@ class MultiSelect extends HTMLElement {
         }
     });
 
-
     constructor() {
         super();
     }
@@ -134,12 +131,33 @@ class MultiSelect extends HTMLElement {
         this.#childObserver.observe(this, { childList: true });
         this.#optionAttributeObserver.observe(this.#native, { attributes: true, subtree: true });
 
+
+
+    }
+
+    #init() {
+        // Things that should only happen once go here
+        this.append(this.#textContainer, this.#buildChevron(), this.#optionContainer);
+        this.addEventListener('click', this.toggle);
+        this.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab' || e.key === 'Enter') return;
+            if (e.target === this.#searchInput) return;
+            e.preventDefault();
+            if (e.key === ' ') {
+                this.toggle();
+                this.#focusableOpts[0]?.focus();
+            }
+        });
+        this.#optionContainer.addEventListener('keydown', this.#handleKeydown);
+        this.#optionContainer.addEventListener('click', (e) => e.stopPropagation());
+        this.#optionContainer.addEventListener('change', this.#handleChange);
+
         this.#updateDisplay();
         this.#updateValidity();
         this.#updateFormData();
         this.tabIndex = 0;
 
-        this.dataset.multiSelectTheme ??= 'default';
+        this.dataset.multiSelectTheme ??= '';
 
         this.#native.multiple = true;
         this.#optionContainer.tabIndex = -1;
@@ -152,27 +170,6 @@ class MultiSelect extends HTMLElement {
         this.#optionContainer.role = 'listbox';
         this.#optionContainer.ariaMultiSelectable = 'true';
 
-    }
-
-    #init() {
-        // Things that should only happen once go here
-        this.append(this.#textContainer, this.#buildChevron(), this.#optionContainer);
-        this.addEventListener('click', this.toggle);
-        this.addEventListener('keydown', (e) => {
-            if (e.target === this.#searchInput) return;
-            if (e.key === 'Tab') return;
-            e.preventDefault();
-            if (e.key === 'ArrowDown') {
-                (this.#optionContainer.firstElementChild as HTMLLabelElement)?.focus();
-            }
-            else if (e.key === ' ' || e.key === 'Enter') {
-                this.toggle();
-            }
-        });
-        this.#optionContainer.addEventListener('click', (e) => e.stopPropagation());
-        this.#optionContainer.addEventListener('change', this.#handleChange);
-        this.#optionContainer.addEventListener('keydown', this.#handleKeydown);
-
         this.#initialized = true;
     }
 
@@ -182,13 +179,6 @@ class MultiSelect extends HTMLElement {
     }
 
     formAssociatedCallback() {
-        // We would have to do something like this in order to allow FormData to accept multiple entries like select[multiple], I think.
-        // This is not great because the element can also switch forms and we have no direct access
-        // this.form?.addEventListener('formdata', () => {
-        // append individual values
-        //     alert('a');
-        // })
-        // could try associating the native with the form.
         this.#updateFormData();
     }
 
@@ -203,11 +193,15 @@ class MultiSelect extends HTMLElement {
             this.emptyText = newValue;
         }
         else if (name === 'max') {
+            newValue = Number(newValue);
+            if (isNaN(newValue)) return;
             this.#max = newValue;
             this.#updateValidity();
         }
         else if (name === 'min') {
-            if (Number(newValue) > this.length) newValue = this.length;
+            newValue = Number(newValue);
+            if (isNaN(newValue)) return;
+            if (newValue > this.length) newValue = this.length;
             this.#min = newValue;
             this.#updateValidity();
         }
@@ -247,10 +241,10 @@ class MultiSelect extends HTMLElement {
     #handleChange = (e: Event) => {
         if (e.target === this.#selectAllCheckbox) {
             if (this.#selectAllCheckbox.checked) {
-                this.selectAll(false);
+                this.#selectVisible();
             }
             else {
-                this.deselectAll();
+                this.#deselectVisible();
             }
         }
         else {
@@ -267,29 +261,57 @@ class MultiSelect extends HTMLElement {
     }
 
     #handleKeydown = (e: KeyboardEvent) => {
-        // e.stopPropagation();
-        // if (e.key === 'Tab') return;
-        // e.preventDefault();
-        // if (e.key === 'ArrowUp') {
-        //     if (!label.previousElementSibling) {
-        //         this.focus();
-        //         return;
-        //     }
-        //     (label.previousElementSibling as HTMLLabelElement)?.focus();
-        // }
-        // else if (e.key === 'ArrowDown') {
-        //     (label.nextElementSibling as HTMLLabelElement)?.focus();
-        // }
-        // else if (e.key === 'Home' || e.key === 'PageUp') {
-        //     (this.#optionContainer.firstElementChild as HTMLLabelElement)?.focus();
-        // }
-        // else if (e.key === 'End' || e.key === 'PageDown') {
-        //     (this.#optionContainer.lastElementChild as HTMLLabelElement)?.focus();
-        // }
-        // else if (e.key === ' ' || e.key === 'Enter') {
-        //     checkbox.checked = !checkbox.checked;
-        //     this.#optionContainer.dispatchEvent(new Event('change'));
-        // }
+        e.stopPropagation();
+        if (e.key === 'Escape') {
+            this.hide();
+            this.focus();
+            return;
+        }
+        if (e.target instanceof HTMLLabelElement) {
+            // Can improve this with shift + arrow
+            e.preventDefault();
+            const checkbox = e.target.firstElementChild as HTMLInputElement;
+            if (e.key === ' ') {
+                checkbox.checked = !checkbox.checked;
+                if (checkbox === this.#selectAllCheckbox) {
+                    if (this.#selectAllCheckbox.checked) {
+                        this.#selectVisible();
+                    }
+                    else {
+                        this.#deselectVisible();
+                    }
+                    return;
+                }
+                this.#optionContainer.dispatchEvent(new Event('change'));
+            }
+            else if (e.key === 'ArrowUp') {
+                const i = this.#focusableOpts.indexOf(e.target);
+                if (i === 0) {
+                    if (this.#showSearch) this.#searchInput.focus();
+                    return;
+                }
+                this.#focusableOpts[i - 1]?.focus();
+            }
+            else if (e.key === 'ArrowDown') {
+                const i = this.#focusableOpts.indexOf(e.target);
+                if (i === this.#focusableOpts.length - 1) return;
+                this.#focusableOpts[i + 1]?.focus();
+            }
+            else if (e.key === 'Home' || e.key === 'PageUp') {
+                this.#focusableOpts[0]?.focus();
+            }
+            else if (e.key === 'End' || e.key === 'PageDown') {
+                this.#focusableOpts[this.#focusableOpts.length - 1]?.focus();
+            }
+        }
+        if (e.target === this.#searchInput && e.key === 'ArrowDown') {
+            e.preventDefault();
+            this.#focusableOpts[0]?.focus();
+        }
+    }
+
+    get #focusableOpts() {
+        return [...this.#optionContainer.querySelectorAll('label:not(:has([disabled]))')] as Array<HTMLLabelElement>;
     }
 
     #buildChevron() {
@@ -316,7 +338,7 @@ class MultiSelect extends HTMLElement {
         groupContainer.setAttribute('form', '');
         groupContainer.role = 'group';
         groupLabel.textContent = optgroup.label;
-        groupContainer.append(groupLabel, ...children.map(option => this.#buildOption(option)));
+        groupContainer.append(groupLabel, ...children.map(option => this.#buildOption(option as HTMLOptionElement)));
         this.#groupMap.set(optgroup, groupContainer);
         return groupContainer;
     }
@@ -333,17 +355,11 @@ class MultiSelect extends HTMLElement {
         checkbox.disabled = option.disabled;
         span.textContent = option.label || option.text;
         label.append(checkbox, span);
-        label.tabIndex = 0;
+        label.tabIndex = option.disabled ? -1 : 0;
         label.role = 'option';
         label.ariaSelected = String(checkbox.checked);
         label.ariaLabel = option.label || option.text;
         if (checkbox.disabled) label.ariaDisabled = 'true';
-
-        // // Shouldn't be able to tab or arrow to a disabled option
-        // // move keydown to optionContainer and handle everything
-        // label.addEventListener('keydown', (e) => {
-        //     this.#handleKeydown(e);
-        // });
         this.#map.set(option, checkbox);
 
         return label;
@@ -363,11 +379,17 @@ class MultiSelect extends HTMLElement {
                 (checkbox.parentElement as HTMLLabelElement).style.display = 'none';
             }
         }
+        // Hide empty groups
+        for (const el of this.#optionContainer.children) {
+            if (!(el instanceof HTMLFieldSetElement)) continue;
+            el.style.display = [...el.children].some(o => o instanceof HTMLLabelElement && o.style.display !== 'none') ? '' : 'none';
+        }
         this.#updateSelectAllCheckbox();
     }
 
     #updateSelectAllCheckbox() {
-        this.#selectAllCheckbox.checked = !!this.visibleOptions.length && (this.visibleOptions.every(o => o.selected));
+        this.#selectAllCheckbox.checked = !!this.visibleOptions.length && (this.visibleOptions.every(o => o.selected || o.disabled));
+        if (this.visibleOptions.every(o => o.disabled)) this.#selectAllCheckbox.checked = false;
         this.#selectAllCheckbox.ariaSelected = String(this.#selectAllCheckbox.checked);
         this.#selectAllCheckbox.indeterminate = !this.#selectAllCheckbox.checked && this.visibleOptions.some(o => o.selected);
     }
@@ -377,93 +399,60 @@ class MultiSelect extends HTMLElement {
             this.#textContainer.textContent = this.#emptyText || '---Select---';
         }
         else if (this.value.length === 1) {
-            this.#textContainer.textContent = this.#native.selectedOptions[0].textContent;
+            this.#textContainer.textContent = this.#native.selectedOptions[0].label;
         }
         else {
             this.#textContainer.textContent = `${this.value.length} ${this.#selectedText || 'selected'}`;
         }
     }
 
-    // #checkMinMax() {
-    //     const hasMin = typeof this.min !== 'undefined';
-    //     const hasMax = typeof this.max !== 'undefined';
-    //     if (hasMax && this.max < this.length) this.max = this.length; // This could cause infinite loops
-    // }
-
-    // #getValidityMessage() {
-    //     let message = '';
-    //     const hasMin = typeof this.min !== 'undefined' && this.min !== 0;
-    //     const hasMax = typeof this.max !== 'undefined' && this.max !== 0;
-
-    //     return message;
-    // }
-
     #updateValidity() {
-        this.#internals.setValidity({}); // Clear
         const selectedLength = this.selectedOptions.length;
         const hasSelections = !!selectedLength;
-        return;
-        if (!this.required && !hasSelections) return; // Valid if empty and not required
-        if (this.required && hasSelections) {
-
-
-
-        }
-        else if (!this.required && hasSelections) {
-
-
-
-        }
-        else if (this.required && !hasSelections) {
-            let message = 'Please select an item in the list';
-            this.#internals.setValidity({ valueMissing: true },);
-
-
-        }
-        return;
-
-
-        // Check if min / max is higher than the number of options
-
-
-        const hasMin = typeof this.min !== 'undefined' && this.min !== 0;
-        const hasMax = typeof this.max !== 'undefined' && this.max !== 0;
-        if (hasMin && hasMax && (this.min > this.max)) {
-            this.min = this.max;
-        }
-        const isValidEmpty = !this.required && selectedLength === 0;
+        const hasMin = !!this.min;
+        const hasMax = !!this.max;
+        const minMaxEqual = hasMax && hasMin && this.min === this.max;
         const underMin = hasMin && selectedLength < this.min;
         const overMax = hasMax && selectedLength > this.max;
-        let message: string;
-        if (this.required && selectedLength === 0) {
-            message = 'This field is required.'; // should display min/max
-        }
-        else if (hasMin && hasMax && this.min === this.max) {
-            message = `You must select ${this.min} options.`
-        }
-        else if (hasMin && hasMax && (underMin || overMax)) {
-            message = `You must select ${this.min}-${this.max} options.`
-        }
-        else if (underMin) {
-            message = `You must select at least ${this.min} options.`
-        }
-        else if (overMax) {
-            message = `You can only select up to ${this.max} options.`
-        }
-        else {
-            message = '';
-        }
-
-
-        if (isValidEmpty) return;
-        if (this.required) {
-            this.#internals.setValidity({ valueMissing: true }, message);
-        }
-        if (underMin) {
-            this.#internals.setValidity({ rangeUnderflow: true }, message);
-        }
-        if (overMax) {
-            this.#internals.setValidity({ rangeOverflow: true }, message);
+        // check min max, check if higher than number of options
+        this.#internals.setValidity({}); // Clear validity
+        if (hasSelections || this.required) {
+            if (underMin) {
+                if (hasMin && hasMax && minMaxEqual) {
+                    this.#internals.setValidity({
+                        valueMissing: !hasSelections,
+                        rangeUnderflow: true
+                    }, `Please select ${this.min} item${this.min > 1 ? 's' : ''}.`);
+                }
+                else if (hasMin && hasMax) {
+                    this.#internals.setValidity({
+                        valueMissing: !hasSelections,
+                        rangeUnderflow: true
+                    }, `Please select ${this.min}-${this.max} item(s).`);
+                }
+                else {
+                    this.#internals.setValidity({
+                        valueMissing: !hasSelections,
+                        rangeUnderflow: true
+                    }, `Please select at least ${this.min} item${this.min > 1 ? 's' : ''}.`);
+                }
+                return;
+            }
+            if (overMax) {
+                if (hasMin && hasMax && minMaxEqual) {
+                    this.#internals.setValidity({ rangeOverflow: true }, `Please select ${this.min} item(s).`);
+                }
+                else if (hasMin && hasMax) {
+                    this.#internals.setValidity({ rangeOverflow: true }, `Please select ${this.min}-${this.max} item(s).`);
+                }
+                else {
+                    this.#internals.setValidity({ rangeOverflow: true }, `Please only select up to ${this.max} item(s).`);
+                }
+                return;
+            }
+            if (!hasSelections && this.required) {
+                this.#internals.setValidity({ valueMissing: true }, `Please select an item from this list.`);
+            }
         }
     }
 
@@ -480,35 +469,6 @@ class MultiSelect extends HTMLElement {
     // Full list of every native <select> method / property as of November 2024
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement
     // I am trying to fully replace select[multiple] -- so I am including every method / property
-
-    //     Instance properties
-    //     autocomplete -- Omitted
-    //     disabled -- Same as "disabled" attribute, locks element
-    //     form - Form associated with element
-    //     labels - Returns a NodeList of any labels associated (either with "for" or as ancestor elements)
-    //     length - Number of options
-    //     multiple - Always true
-    //     name - Same as "name" attribute
-    //     options - HTMLOptionsCollection
-    //     required - Same as "required" attribute
-    //     selectedIndex - Index of first selected option
-    //     selectedOptions - HTMLCollectionOf<HTMLOptionElement> - Interestingly, this is natively a different type than "options"
-    //     size - Set to 0 always. This can be handled by CSS
-    //     type - This is either "select-multiple" or "select-one"
-    //     validationMessage - Current native validation message, blank string if valid
-    //     validity - ValidityState object
-    //     value - Is implemented differently from the native select
-    //     willValidate - Determines whether element is a candidate for constraint validation (true if not disabled, etc.)
-
-    //     Instance methods
-    //     add() - Add option or optgroup
-    //     checkValidity() - Returns boolean
-    //     item()
-    //     namedItem()
-    //     remove() - Removes option if index is included. This is an overload, because it also removes the element if no arguments are given
-    //     reportValidity() - Shows validation message and returns boolean
-    //     setCustomValidity() - Change validity message, or set to blank string to clear it
-    //     showPicker() - Open the dropdown. Same as show(), which is custom
 
     // === NATIVE PROPERTIES === These exist on the regular HTML select element
 
@@ -538,11 +498,8 @@ class MultiSelect extends HTMLElement {
         return this.#internals.form;
     }
 
-    get labels(): NodeListOf<HTMLLabelElement> {
-        // This is pretty complicated, since we have to get for="" and ancestor labels, without duplicating them, and put them in a NodeList and not a 
-        if (!this.id) return document.querySelectorAll('');
-        // We would also have to return parent label elements
-        return document.querySelectorAll(`label[for="${this.id}"]`);
+    get labels() {
+        return this.#internals.labels;
     }
 
     get length(): number {
@@ -709,8 +666,11 @@ class MultiSelect extends HTMLElement {
     }
 
     set max(max: number) {
+        max = Number(max);
+        if (isNaN(max) || max < 0) max = 0;
+        if (max > this.length) max = this.length;
+        if (!!this.min && max < this.min) this.min = max;
         this.#max = max;
-        // Max could be 0 in which case we might want to remove the attribute
         this.setAttribute('max', String(max));
         this.#updateValidity();
     }
@@ -721,14 +681,17 @@ class MultiSelect extends HTMLElement {
     }
 
     set min(min: number) {
+        min = Number(min);
+        if (isNaN(min) || min < 0) min = 0;
         if (min > this.length) min = this.length;
+        if (!!this.max && min > this.max) this.max = min;
         this.#min = min;
         this.setAttribute('min', String(min));
         this.#updateValidity();
     }
 
-    get optGroups(): Array<HTMLOptGroupElement> {
-        return [...this.#native.children].filter(child => child instanceof HTMLOptGroupElement);
+    get optgroups(): Array<HTMLOptGroupElement> {
+        return [...this.#native.children].filter(child => child instanceof HTMLOptGroupElement) as Array<HTMLOptGroupElement>;
     }
 
     #open = false;
@@ -826,6 +789,17 @@ class MultiSelect extends HTMLElement {
         this.value = [];
     }
 
+    #deselectVisible(): void {
+        const val = [];
+        // This is the opposite
+        for (const [option, checkbox] of this.#map) {
+            if (checkbox.disabled) continue;
+            if (checkbox.parentElement?.style?.display !== 'none') continue;
+            val.push(option.value);
+        }
+        this.value = val;
+    }
+
     hide(): void {
         if (!this.#open) return;
         this.#optionContainer.style.display = 'none';
@@ -835,18 +809,17 @@ class MultiSelect extends HTMLElement {
         document.removeEventListener('click', this.#dismiss);
     }
 
-    selectAll(includeHidden = true): void {
-        if (includeHidden) {
-            this.value = [...this.options].map(o => o.value);
-        }
-        else {
-            this.value = this.visibleOptions.map(o => o.value);
-        }
+    selectAll(): void {
+        this.value = [...this.options].filter(o => !o.disabled).map(o => o.value);
+    }
+
+    #selectVisible() {
+        this.value = this.visibleOptions.filter(o => !o.disabled).map(o => o.value);
     }
 
     show(): void {
         if (this.#open) return;
-        this.#optionContainer.style.display = 'grid';
+        this.#optionContainer.style.display = 'block';
         this.#open = true;
         this.setAttribute('open', '');
         this.ariaExpanded = 'true';
@@ -863,10 +836,18 @@ class MultiSelect extends HTMLElement {
     }
 
     toggleSelectAll(): void {
-        if (this.value.length === this.length) this.deselectAll();
+        if (this.value.length === [...this.options].filter(o => !o.disabled).length) this.deselectAll();
         else this.selectAll();
     }
 
 }
 
 customElements.define('multi-select', MultiSelect);
+
+// to do -
+// check if we can get string init to work with .innerhtml check
+// constructor init so that new MultiSelect(options) works
+// more css
+// shuffle and alphabetize methods
+// disableOption method
+// better type safety
